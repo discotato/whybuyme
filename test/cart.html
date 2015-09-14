@@ -1,0 +1,184 @@
+<html>
+<head>
+<title>WhyBuy.Me: shopping cart tests</title>
+<script type="text/javascript" src="../static/cart.js"></script>
+<script type="text/javascript" src="../static/modernizr.js"></script>
+<script type="text/javascript" src="../static/vault.min.js"></script>
+<script type="text/javascript" src="../static/pod.js"></script>
+<script type="text/javascript" src="../static/cart-pod.js"></script>
+
+<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
+<script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+
+</head>
+<body>
+<script type="text/javascript">
+//check for local storage (use modernizer for this)
+if (Modernizr.localstorage) {
+	console.log("local storage is OK");
+} else {
+	console.log("no native support for HTML5 storage");
+}
+
+//shopping cart item handlers (fires when item is added to, or removed from cart)
+var itemHandler = function () {
+	console.log('something pushed');
+}
+var itemPopHandler = function () {
+	console.log('something popped');
+}
+
+$(document).ready(function() {
+	//----------
+	// POD database storage test functions contained in pod.js. POD is where we will store persistent data usually wen loading
+	// a shopping cart or when payment is made and we would like to store the address of a user.
+	//----------
+	var pod = new POD("https://discotato.com/pod/", "20150609_testapp"); //set up the location of the web service and appkey
+	
+	var f = function(json){
+		console.log(JSON.stringify(json));
+	}
+	
+	//just for fun, lets get the user location from their IP address
+	//pod.getGeoLocation(f);
+	
+	//get the details of the registered app from the APPKEY
+	//pod.getApp(f);
+	
+	//get user by ID registered with the app. POD has a simple user management system used to authenticate
+	//var userId = 1;
+	//pod.getUserById(f, userId);
+	
+	//get all registered apps by the user
+	//pod.getUserApps(f, userId);
+	
+	//get a JSON object by ID (an ID is an integer)
+	//var objId = 9;
+	//pod.getObjectById(f, objId);
+	
+	//get objects with a cageory name Store1.Items (all items for object belonging to category called Store1).
+	//Depth is 2 which can be adjusted to return more or less depth of results.
+	//pod.getObjectByCategory(f, "Store1.Items", "2");
+	
+	//get all app objects (used to view what's in the POD database)
+	//pod.getAppObjects(f);
+	
+	//get all objects having a matching categoryid
+	//pod.getObjectsByCategoryId(f, 12);
+	
+	//get a specific customer order by searching the category name "Customer1.Orders".
+	//set depth to 1 (a hack)
+	//pod.getAppObjectsByCategoryName(f, "Customer1.Orders", "1");
+	
+	//get all the categories of the app. Used to view what categories look like
+	//pod.getAppCategories(f);
+	
+	//get all the cagegories in the POD database. (only usefull for Admin functions)
+	//pod.getCategories(f);
+	
+	//get all keys associated with the object id
+	//pod.getObjectKeys(f, 9);
+	
+	//get the key using the keyid
+	//var keyid = 1;
+	//pod.getKey(f, keyid);
+	
+	//get the value of a specified key
+	//var keyid = 1;
+	//pod.getValueByKeyId(f, keyid);
+	
+	//get the value by value id
+	//var valueid = 1;
+	//pod.getValueById(f, valueid);
+	
+	//----------
+	// Test the POD Cart class which combines the POD database with cart functions.
+	// This is the class you will used in ALL of your code to work with cart functionality.
+	//----------
+	var podCart = new PODCart("https://discotato.com/pod/", "20150609_testapp"); //set up the location of the web service and appkey
+	
+	//get all stores
+	//podCart.getAllStores(f);
+	
+	//get store details
+	//podCart.getStoreByName(f, "Store1");
+	
+	//get all store items
+	//podCart.getStoreItems(f, "Store1");
+	
+	//get store customers
+	//podCart.getStoreCustomers(f, "Store1");
+	
+	//get customer orders
+	//podCart.getCustomerOrders(f, "Customer1");
+	
+	//get order details
+	//podCart.getOrderByName(f, "Order1");
+	
+	//----------
+	// Test the Cart functions. This class assists organizing shopping cart data.
+	// Functions will be added to this Class to store shopping cart objects such as Orders to persistent storage in POD
+	//----------
+	
+	//create a store and set some properties
+	var store = new Store("Store2", "Store2", "description");
+	store.address = "1007 Main St., Vancouver, BC, V6A 4C4";
+	store.imageUrl = "DB4604.jpg";
+	
+	//now set the push and pop handlers on the store when items are added or removed
+	store.setItemPushHandler(itemHandler);
+	store.setItemPopHandler(itemPopHandler);
+	
+	//we can get the address of the store
+	console.log(store.getAddress());
+	
+	//create an item to add to the store (itemId, storeId, name, description, unit, qty, price)
+	var item = new Item("Item2", "Store2", "Dark Coffee", "One of our most famous brands of coffee", "lb", 1000, 16);
+	store.addItem(item);
+	
+	//print out the store
+	console.log(JSON.stringify(store));
+	
+	//get the store item total
+	console.log(store.getStoreItemTotal());
+	
+	//remove an itme from the store (ensure the event fires)
+	//store.removeItem(item);
+	
+	//create a cart and modify the quantity of items.
+	//NOTE: we are only setting a cartQty variable not creating a copy of the store item.
+	var cart = new Cart(); //accepts callback parameters for store pushed and store popped
+	cart.addStore(store);
+	
+	//add 2 items to the cart and then remove 1 item (storeId, itemId)
+	cart.incrementCartItemQty("Store2", "Item2");
+	cart.incrementCartItemQty("Store2", "Item2");
+	cart.decrimentCartItemQty("Store2", "Item2");
+	
+	//ensure the cart totals are correct
+	console.log(cart.getCartTotal());
+	console.log(cart.getStoreTotal("Store2"));
+	console.log(cart.getItemTotal("Store2", "Item2"));
+	console.log(JSON.stringify(cart));
+	
+	//now we need to store the cart in local storage so a page refresh doesn't wipe out the cart
+	//use vault as a convenient way to access the cart (view online documentation for vault)
+	vault.set('cart.mycart', cart);
+	var mycart = vault.get('cart.mycart');
+	console.log("cart.mycart: " + JSON.stringify(mycart));
+	//vault.remove('cart.mycart');
+	
+	//we need to store the users address to pass onto the payment system
+	var shippingAddress = new Address("3-1 Biggs Ave", "Fort McMurray", "Alberta", "Canada", "t9h2b7");
+	console.log(JSON.stringify(shippingAddress));
+	
+	//in case you need to clone store for cart (NOTE: does not clone the methods of an object)
+	//var clone = (JSON.parse(JSON.stringify(store)));
+});
+
+</script>
+
+</body>
+</html>
